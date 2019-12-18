@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
     ImageView imageView, logo;
     Bitmap bmg;
     EditText editText;
-    String hasilPredict = "botol";
+    String hasilPredict = "kertas";
 
 
     @Override
@@ -61,9 +61,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if(hasilPredict.equals("kertas")) {
-                    Toast.makeText(MainActivity.this, "Kertas View", Toast.LENGTH_SHORT);
+                    setContentView(R.layout.activity_paper);
                 } else if(hasilPredict.equals("daun")){
-                    Toast.makeText(MainActivity.this, "Kertas View", Toast.LENGTH_SHORT);
+                    setContentView(R.layout.activity_daun);
                 }else if(hasilPredict.equals("botol")){
                     setContentView(R.layout.activity_botol);
                 }else{
