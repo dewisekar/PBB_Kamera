@@ -29,11 +29,12 @@ public class MainActivity extends AppCompatActivity {
     private static final int MY_PERMISSIONS_REQUEST_WRITE = 223;
     private static final String TAG = MainActivity.class.getSimpleName();
     //    private static final int REQUEST_IMAGE_CAPTURE = 101;
-    Button button;
-    Button uploadButton;
-    ImageView imageView;
+    Button button, predictbtn;
+    ImageView imageView, logo;
     Bitmap bmg;
     EditText editText;
+    String hasilPredict = "botol";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,9 +43,10 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         button = (Button) findViewById(R.id.button);
-        uploadButton = (Button) findViewById(R.id.uploadButton);
-        imageView = (ImageView) findViewById(R.id.imageView);
-        editText = (EditText) findViewById(R.id.labelText);
+//        imageView = (ImageView) findViewById(R.id.imageView);
+        predictbtn = findViewById(R.id.predictbtn);
+        logo = findViewById(R.id.logo);
+
 
 
         button.setOnClickListener(new View.OnClickListener() {
@@ -55,23 +57,21 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        uploadButton.setOnClickListener(new View.OnClickListener() {
+        predictbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Drawable drawable = imageView.getDrawable();
-                boolean hasImage = (drawable != null);
+                if(hasilPredict.equals("kertas")) {
+                    Toast.makeText(MainActivity.this, "Kertas View", Toast.LENGTH_SHORT);
+                } else if(hasilPredict.equals("daun")){
+                    Toast.makeText(MainActivity.this, "Kertas View", Toast.LENGTH_SHORT);
+                }else if(hasilPredict.equals("botol")){
+                    setContentView(R.layout.activity_botol);
+                }else{
 
-                if (hasImage && (drawable instanceof BitmapDrawable)) {
-
-//                    Toast.makeText(getApplicationContext(), "error anjeng", Toast.LENGTH_LONG).show();
-                    sendPost();
-
-
-                } else {
-                    Toast.makeText(getApplicationContext(), "take a photo", Toast.LENGTH_LONG).show();
                 }
             }
         });
+
 
     }
 
@@ -80,8 +80,14 @@ public class MainActivity extends AppCompatActivity {
         Bundle bundle = data.getExtras();
         Bitmap bitmap = (Bitmap) bundle.get("data");
         bmg = bitmap;
-        imageView.setImageBitmap(bitmap);
+        logo.setImageBitmap(bitmap);
+        predictbtn.setVisibility(View.VISIBLE);
+        button.setVisibility(View.INVISIBLE);
+
+
     }
+
+
 
     private void askWritePermission() {
 
