@@ -21,6 +21,9 @@ import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
 
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -28,12 +31,11 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity {
     private static final int MY_PERMISSIONS_REQUEST_WRITE = 223;
     private static final String TAG = MainActivity.class.getSimpleName();
-    //    private static final int REQUEST_IMAGE_CAPTURE = 101;
     Button button, predictbtn;
     ImageView imageView, logo;
     Bitmap bmg;
     EditText editText;
-    String hasilPredict = "kertas";
+    String hasilPredict;
 
 
     @Override
@@ -43,7 +45,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         button = (Button) findViewById(R.id.button);
-//        imageView = (ImageView) findViewById(R.id.imageView);
         predictbtn = findViewById(R.id.predictbtn);
         logo = findViewById(R.id.logo);
 
@@ -60,19 +61,9 @@ public class MainActivity extends AppCompatActivity {
         predictbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(hasilPredict.equals("kertas")) {
-                    setContentView(R.layout.activity_paper);
-                } else if(hasilPredict.equals("daun")){
-                    setContentView(R.layout.activity_daun);
-                }else if(hasilPredict.equals("botol")){
-                    setContentView(R.layout.activity_botol);
-                }else{
-
-                }
+                sendPost();
             }
         });
-
-
     }
 
     @Override
@@ -102,38 +93,59 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void sendPost() {
-        if(editText.length()==0 ||  editText.getText().toString().trim().equals(".")){
-            editText.setError("Label tidak boleh kosong!");
-        }
-//        Toast.makeText(getApplicationContext(), "masuk sendpost", Toast.LENGTH_LONG).show();
-       else{
-            String img_b64 = "data:image/jpeg;base64," + encodeToBase64(bmg, Bitmap.CompressFormat.JPEG, 100);
+        Toast.makeText(getApplicationContext(), "Is predicting...", Toast.LENGTH_LONG).show();
+        ByteArrayOutputStream baos;
+        baos = new ByteArrayOutputStream();
+        bmg.compress(Bitmap.CompressFormat.PNG, 100, baos);
 
-            ApiInterface apiService =  RetrofitClientInstance.getRetrofitInstance().create(ApiInterface.class);
+        RequestBody image = RequestBody.create(MediaType.parse("image/*"),baos.toByteArray());
+        MultipartBody.Part bodyImage = MultipartBody.Part.createFormData("image", "gambar sampah", image);
 
-            Log.i(TAG, img_b64.toString());
-            Call<FileUpload> call = apiService.uploadFile(editText.getText().toString().trim(), img_b64);
-            call.enqueue(new Callback<FileUpload>() {
-                @Override
-                public void onResponse(Call<FileUpload> call, Response<FileUpload> response) {
-                    if (response.isSuccessful()) {
-                        Toast.makeText(getApplicationContext(), "sukses", Toast.LENGTH_LONG).show();
-                        Log.i(TAG, "post submitted to API." + response.body().toString());
-                    }
-                    else{
-                        Log.i(TAG, "post failed to be submitted to API." + response.toString());
-                        Toast.makeText(getApplicationContext(), "salah format", Toast.LENGTH_LONG).show();
-
-                    }
+        ApiInterface apiService =  RetrofitClientInstance.getRetrofitInstance().create(ApiInterface.class);
+//            Call<FileUpload> call = apiService.uploadFile(editText.getText().toString().trim(), img_b64);
+//            call.enqueue(new Callback<FileUpload>() {
+//                @Override
+//                public void onResponse(Call<FileUpload> call, Response<FileUpload> response) {
+//                    if (response.isSuccessful()) {
+//                        Toast.makeText(getApplicationContext(), "sukses", Toast.LENGTH_LONG).show();
+//                        Log.i(TAG, "post submitted to API." + response.body().toString());
+//                    }
+//                    else{
+//                        Log.i(TAG, "post failed to be submitted to API." + response.toString());
+//                        Toast.makeText(getApplicationContext(), "salah format", Toast.LENGTH_LONG).show();
+//
+//                    }
+//                }
+//
+//                @Override
+//                public void onFailure(Call<FileUpload> call, Throwable t) {
+//                    Toast.makeText(getApplicationContext(), "gagal ngepost", Toast.LENGTH_LONG).show();
+//                    Log.e("kenapa gagal ngepost " + TAG, t.toString());
+//                }
+//            });
+        Call<String> call = apiService.predict(bodyImage);
+        call.enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(Call<String> call, Response<String> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(getApplicationContext(), "Predicting Success", Toast.LENGTH_LONG).show();
+                    Log.i(TAG, "post submitted to API." + response.body().toString());
+                    hasilPredict = response.body().toString();
+                    changeScreen();
                 }
+                else{
+                    Log.i(TAG, "post failed to be submitted to API." + response.body().toString());
+                    Toast.makeText(getApplicationContext(), "Predicting Failed", Toast.LENGTH_LONG).show();
 
-                @Override
-                public void onFailure(Call<FileUpload> call, Throwable t) {
-                    Toast.makeText(getApplicationContext(), "gagal ngepost", Toast.LENGTH_LONG).show();
-                    Log.e("kenapa gagal ngepost " + TAG, t.toString());
                 }
-            });
-        }
+            }
+
+            @Override
+            public void onFailure(Call<String> call, Throwable t) {
+                Toast.makeText(getApplicationContext(), "Failed to Connect to Server", Toast.LENGTH_LONG).show();
+                Log.e("kenapa gagal ngepost " + TAG, t.toString());
+            }
+        });
 
     }
 
@@ -142,5 +154,17 @@ public class MainActivity extends AppCompatActivity {
         ByteArrayOutputStream byteArrayOS = new ByteArrayOutputStream();
         image.compress(compressFormat, quality, byteArrayOS);
         return Base64.encodeToString(byteArrayOS.toByteArray(), Base64.DEFAULT);
+    }
+
+    public void changeScreen(){
+        if(hasilPredict.equals("Batik Mega Mendung")) {
+            setContentView(R.layout.activity_paper);
+        } else if(hasilPredict.equals("Batik Modern")){
+            setContentView(R.layout.activity_daun);
+        }else if(hasilPredict.equals("botol")){
+            setContentView(R.layout.activity_botol);
+        }else{
+
+        }
     }
 }
